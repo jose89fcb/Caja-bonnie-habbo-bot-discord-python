@@ -27,7 +27,7 @@ slash = SlashCommand(bot, sync_commands=True)
     options=[
                 create_option(
                   name="keko",
-                  description="Escribe el keko 1",
+                  description="Escribe el keko",
                   option_type=3,
                   required=True
                 ),
@@ -191,11 +191,11 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
   
     ###
      almo = Image.open(r"imagenes/caja.png").convert("RGBA") #imagen
-     img1 = almo.resize((138,295), Image.ANTIALIAS)#tamaño de la almo
+     img1 = almo.resize((138,295), Image.ANTIALIAS)#tamaño de la caja.png
 
     ###
      fondos = Image.open(r"imagenes/" +fondos+".png").convert("RGBA") #imagen
-     img1 = fondos.resize((138,295), Image.ANTIALIAS)#tamaño de la almo
+     img1 = fondos.resize((138,295), Image.ANTIALIAS)#tamaño de los fondos
 
     
     
