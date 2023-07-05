@@ -27,7 +27,7 @@ slash = SlashCommand(bot, sync_commands=True)
     options=[
                 create_option(
                   name="keko",
-                  description="Escribe el keko",
+                  description="Escribe el keko 1",
                   option_type=3,
                   required=True
                 ),
@@ -136,11 +136,13 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
      habbo = response.json()['figureString']
      
     except KeyError:
-        await ctx.send("Uno de los kekos no existe!") 
+        await ctx.send("El keko no existe!") 
    
 
    
-    
+    ##
+    # programado Por jose89fcb
+    ###
 
     
     
@@ -191,7 +193,7 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
   
     ###
      almo = Image.open(r"imagenes/caja.png").convert("RGBA") #imagen
-     img1 = almo.resize((138,295), Image.ANTIALIAS)#tamaño de la caja.png
+     img1 = almo.resize((138,295), Image.ANTIALIAS)#tamaño de la caja
 
     ###
      fondos = Image.open(r"imagenes/" +fondos+".png").convert("RGBA") #imagen
@@ -275,11 +277,9 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
         img1.save(image_binary, 'PNG')
         image_binary.seek(0)
 
-        await ctx.send(file=discord.File(fp=image_binary, filename='keko.png'))
+        await ctx.send(f"`{keko}`", file=discord.File(fp=image_binary, filename='keko.png'))
     except UnboundLocalError:
-        
-        habbo1=":("
-        habbo=":("    
+       habbo=":("    
          
         
         
