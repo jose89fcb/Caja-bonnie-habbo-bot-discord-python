@@ -27,7 +27,7 @@ slash = SlashCommand(bot, sync_commands=True)
     options=[
                 create_option(
                   name="keko",
-                  description="Escribe el keko 1",
+                  description="Escribe el keko",
                   option_type=3,
                   required=True
                 ),
