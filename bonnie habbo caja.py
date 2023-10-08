@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 import datetime
 import io
+import re
  
 from urllib import parse, request
 from PIL import Image, ImageDraw, ImageFont, ImageFile
@@ -13,10 +14,19 @@ import time
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_choice, create_option
 from discord_slash import SlashCommand, SlashContext
+import base64
 
 
 with open("configuracion.json") as f:
     config = json.load(f)
+    imgur_auth_type = config["imgur"]["auth_type"]
+
+
+
+    
+    imgur_token = config["imgur"]["token"]
+    
+    imgur_headers = {'Authorization': f'{imgur_auth_type} {imgur_token}'}
 
 bot = commands.Bot(command_prefix='!', description="ayuda bot") #Comando
 bot.remove_command("help") # Borra el comando por defecto !help
@@ -277,18 +287,141 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
         img1.save(image_binary, 'PNG')
         image_binary.seek(0)
 
-        await ctx.send(f"`{keko}`", file=discord.File(fp=image_binary, filename='keko.png'))
+        img_base64 = base64.b64encode(image_binary.read()).decode('utf-8')
+
+
+        params = {
+                'title': f'Imagen subida por {ctx.author.display_name} Servidor de discord {ctx.guild.name}',
+                'description': f'Podras generar tú keko de Habbo Hotel en el servidor de discord {ctx.guild.name}',
+                'name': 'Habbo Hotel',
+                'image': img_base64,
+            }
+
+        r = requests.post(f'https://api.imgur.com/3/image', headers=imgur_headers, data=params)
+
+        try:
+
+         data = r.json()["data"]["link"]
+       
+         id = r.json()["data"]["id"]
+         borrar = r.json()["data"]["deletehash"]
+        except KeyError:
+            await ctx.send("Falta el token de imgur ¿Cómo hacerlo? https://www.youtube.com/watch?v=fQKHCASxd7Y")  
+
+        embed = discord.Embed(title="Habbo Hotel", url="https://twitter.com/jose89fcb", description=f"[Descargar Skin](https://imgur.com/{id}.png)", color=discord.Colour.random())
+        embed.set_footer(text=f"BOT Programado Por Jose89fcb")
+
+        image_data = io.BytesIO(base64.b64decode(img_base64))
+        image_file = discord.File(image_data, filename=f'keko.png')
+        embed.set_image(url=f"attachment://keko.png")
+
+        await ctx.send(embed=embed, file=image_file)
+
+        embed = discord.Embed(title="Este mensaje solo lo podrás ver tú",
+                                  description=f"Hola, {ctx.author.mention}\n\n\n\nEste es tú código: **{borrar}** para el usuario de Habbo **{keko}** por si quieres borrar la imagen con el comando /borrar + código\n\n**Aviso:** Esto sólo podrás borrar la imagen alojada en imgur.com él código lo podrás ver tú solo (NO LO COMPARTAS CON NADIE)",
+                                  color=discord.Colour.random())
+
+        await ctx.send(
+                f"Link directo:\n```{data}```\nBBCode(Para foros):\n```[img]{data}[/img]```\nCódigo html: ```<a href='{data}'><img src='{data}' title='{keko}' /></a>``` \nID:```{id}```", hidden=True, embed=embed)
+
+        await ctx.message.add_reaction("👍")
+        await ctx.message.add_reaction("👎")
+        await ctx.message.add_reaction("💩")
+        await ctx.message.add_reaction("😍")
+
+        try:
+                embed = discord.Embed(title=f"Código para {keko}")
+                embed.add_field(name=f"👇👇👇👇",
+                                value=f"Este es tú código **{borrar}** para poder borrar la imagen de **{keko}**",
+                                inline=False)
+
+                await ctx.author.send(embed=embed)
+                await ctx.author.send(f"\n\n{borrar}")
+
+                await ctx.send("Te acabo de enviar un mensaje privado", hidden=True)
+
+        except discord.errors.Forbidden:
+                await ctx.send(
+                    "No pudimos enviarte el mensaje privado, => click en ajustes de usuario => privacidad y seguridad => permitir mensajes directos...\n\nNo te preocupes, el mensaje privado solo guarda el código qué te he mendado más arriba y poder borrar la imagen, por si lo pierdes al cerrar discord",
+                    hidden=True)
+
+    except FileNotFoundError:
+        error_message = f"Error: La skin '{keko}' no existe."
+        await ctx.send(error_message)
     except UnboundLocalError:
-       habbo=":("    
-         
+        habbo=":("
+
+       
         
         
         
-        
+
+
+
+@slash.slash(
+    name="borrar",
+    description="Escribe La id para borrar la imagen",
+    options=[
+        create_option(
+            name="borrar_imagen",
+            description="Escribe el ID para borrar la imagen",
+            option_type=3,
+            required=True
+        ),
+    ]
+)
+async def borrar(ctx: SlashContext, borrar_imagen: str):
+    url = f"https://api.imgur.com/3/image/{borrar_imagen}"
+
+    # Verifica si el input es una URL válida
+    if not re.match(r'https://.+', url):
+        embed = discord.Embed(title="Error", description="La entrada no es una URL válida.", color=0xff0019)
+        await ctx.send(embed=embed, hidden=True)
+        return
+
+    # Verifica si la longitud del ID es 15
+    if len(borrar_imagen) != 15:
+        embed = discord.Embed(title="Error", description="La ID de imagen debe tener 15 caracteres.", color=0xff0019)
+        await ctx.send(embed=embed, hidden=True)
+        return
+
+    # Intenta borrar la imagen directamente
+    try:
+        response = requests.delete(url, headers=imgur_headers)
+        response.raise_for_status()  # Lanza una excepción si hay un error HTTP
+
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
+
+        # Procesa la respuesta según el código de estado
+        if response.status_code == 200:
+            embed = discord.Embed(title="Éxito", description="Imagen borrada con éxito.", color=0x00ff00)
+            await ctx.send(embed=embed, hidden=True)
+        elif response.status_code == 404:
+            embed = discord.Embed(title="Error", description="El ID de imagen no existe en Imgur.", color=0xff0019)
+            await ctx.send(embed=embed, hidden=True)
+        elif response.status_code == 403:
+            embed = discord.Embed(title="Error", description="No tienes permisos para borrar esta imagen en Imgur.", color=0xff0019)
+            await ctx.send(embed=embed, hidden=True)
+        else:
+            embed = discord.Embed(title="Error", description=f"Error desconocido: {response.status_code}", color=0xff0019)
+            await ctx.send(embed=embed, hidden=True)
+
+    except requests.exceptions.RequestException as e:
+        embed = discord.Embed(title="Error", description=f"Error al borrar la imagen: {e}", color=0xff0019)
+        await ctx.send(embed=embed, hidden=True)
+
+
+
+
+
+
+
+
 
 
 @bot.event
 async def on_ready():
     print("BOT listo!")
     
-bot.run(config["tokendiscord"])   
+bot.run(config["discord"]["token"])   

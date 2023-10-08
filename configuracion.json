@@ -1,4 +1,9 @@
 {
-
-"tokendiscord":""    
-}
+    "imgur": {
+      "auth_type": "Bearer",  
+      "token": "TOKEN DE IMGUR AQUI"
+    },
+    "discord": {
+      "token": "TU TOKEN DE BOT AQUÍ"
+    }
+  }
