@@ -1,3 +1,6 @@
+TUTORIAL TOKEN API IMGUR: https://github.com/jose89fcb/token-imgur-api-python-discord
+
+
 
 Sólo falta que añadas tú el token 👇
 
