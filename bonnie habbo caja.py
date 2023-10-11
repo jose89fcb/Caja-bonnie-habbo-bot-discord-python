@@ -284,7 +284,8 @@ async def _caja(ctx:SlashContext, keko, hotel, fondos):
        
         
      with io.BytesIO() as image_binary:
-        img1.save(image_binary, 'PNG')
+        img1.save(image_binary, 'PNG', transparency=None, save_all=True) # Si quieres el formato PNG dejalo tal como está
+                                                                         # Si quieres el formato GIF añade este codigo. -> image_binary, 'GIF', transparency=0, save_all=True      
         image_binary.seek(0)
 
         img_base64 = base64.b64encode(image_binary.read()).decode('utf-8')
